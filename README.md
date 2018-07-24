@@ -17,5 +17,3 @@
 | subonly   | on, off           | 구독자 전용 채팅 모드를 활성화/비활성화 합니다. 활성화시 구독하지 않은 시청자의 채팅은 읽지 않습니다. | !!tts subonly on       |
 | uniq   | on, off           | TTS 보이스 개인화 설정을 활성화/비활성화 합니다. 활성화시 닉네임에 따라 피치/속도가 바뀝니다. (기본 활성화) | !!tts uniq off       |
 
-## 데모 사이트
-https://lastorder.xyz/chatreader-kor/speech.html
