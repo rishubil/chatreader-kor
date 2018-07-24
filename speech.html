@@ -391,22 +391,6 @@
 						// 트위치 이모티콘은 읽지 않음
 						message = replaceTwitchEmoticon(message, e.emotes);
 
-						if (message != "") {
-							// 모더레이터/스트리머는 설정 무관 최대 120글자 읽기 가능
-							if (((e.mod && index < 0) || e.streamer || e.badges.indexOf("broadcaster/1") != -1) && message.length < 120) {
-								playText(message, personality_speed, personality_pitch, false, e.from);
-							} else {
-								// 밴리스트에 없는 아이디면서 채팅 길이가 지정된 길이 미만
-								if (index === -1 && message.length < window.maxlength) {
-									if(window.tts_subonly) {
-										if(e.sub) playText(message, personality_speed, personality_pitch, false, e.from);
-									} else {
-										playText(message, personality_speed, personality_pitch, false, e.from);
-									}
-								}
-							}
-						}
-
 						message = message.replace(/ㄱ/g, "기역");
 						message = message.replace(/ㄴ/g, "니은");
 						message = message.replace(/ㄷ/g, "디귿");
@@ -447,6 +431,22 @@
 						message = message.replace(/ㅞ/g, "웨");
 						message = message.replace(/ㅟ/g, "위");
 						message = message.replace(/ㅢ/g, "의");
+
+						if (message != "") {
+							// 모더레이터/스트리머는 설정 무관 최대 120글자 읽기 가능
+							if (((e.mod && index < 0) || e.streamer || e.badges.indexOf("broadcaster/1") != -1) && message.length < 120) {
+								playText(message, personality_speed, personality_pitch, false, e.from);
+							} else {
+								// 밴리스트에 없는 아이디면서 채팅 길이가 지정된 길이 미만
+								if (index === -1 && message.length < window.maxlength) {
+									if(window.tts_subonly) {
+										if(e.sub) playText(message, personality_speed, personality_pitch, false, e.from);
+									} else {
+										playText(message, personality_speed, personality_pitch, false, e.from);
+									}
+								}
+							}
+						}
 					}
 				}
 			});
