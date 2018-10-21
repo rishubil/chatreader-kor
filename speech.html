@@ -63,7 +63,12 @@
 
 				for (var replace_id in replace_list) {
 					regExp = new RegExp(escapeRegExp(replace_id), "g");
-					message = message.replace(regExp, "");
+					
+					if (typeof window.emotelist[replace_id] != 'undefined') {
+						message = message.replace(regExp, window.emotelist[replace_id]);
+					} else {
+						message = message.replace(regExp, "");
+					}
 				}
 			}
 
@@ -129,11 +134,21 @@
 		// 밴키워드(로컬스토리지 저장, !!tts ban (아이디) 로 밴하고 !!tts unban (아이디)로 밴 해제)
 		window.bankeyword = localStorage.getItem("tts_bankeyword_" + window.channelname) !== null ? localStorage.getItem("tts_bankeyword_" + window.channelname).split("|") : [];
 
+		// 읽을 이모티콘
+		window.emotelist = localStorage.getItem("tts_emote_" + window.channelname) !== null ? JSON.parse(localStorage.getItem("tts_emote_" + window.channelname)) : {};
+
 		// 기본적으로 밴할 리스트
 		window.banlist = window.banlist.concat(['Nightbot', '싹둑']);
 
 		// 기본적으로 밴할 키워드
 		window.bankeyword = window.bankeyword.concat(['섹스']);
+
+		// 기본적으로 읽을 이모티콘
+		Object.assign(window.emotelist, {
+			'silver119SilverHae' : '헤',
+			'silver119SilverEuu' : '으',
+			'silver119SilverUk'  : '윽'
+		});
 		
 		// 구독자 전용
 		window.tts_subonly = localStorage.getItem("tts_subonly") === "true" ? true : false;
@@ -302,6 +317,25 @@
 									} else {
 										TAPIC.sendChat("/me [TTSBOT] 시청자 " + command + " 은 이미 차단되어 있습니다.");
 									}
+								}
+							}
+						}
+
+						if (command.indexOf("emote ") !== -1) {
+							command = command.replace("emote ", "");
+							if (command != "") {
+								var pair = command.split(" ");
+								var emote = pair[0];
+
+								if (pair.length === 1) {
+									delete window.emotelist[emote];
+									localStorage.setItem("tts_emote_" + window.channelname, JSON.stringify(window.emotelist));
+									TAPIC.sendChat("/me [TTSBOT] 이모티콘 " + emote + " 를 읽지 않습니다.");
+								} else if (pair.length >= 1) {
+									var replacer = pair[1];
+									window.emotelist[emote] = replacer;
+									localStorage.setItem("tts_emote_" + window.channelname, JSON.stringify(window.emotelist));
+									TAPIC.sendChat("/me [TTSBOT] 이모티콘 " + emote + " 를 " + replacer + " 로 읽습니다.");
 								}
 							}
 						}
