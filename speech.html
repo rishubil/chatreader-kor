@@ -325,14 +325,14 @@
 							command = command.replace("emote ", "");
 							if (command != "") {
 								var pair = command.split(" ");
-								var emote = pair[0];
+								var emote = pair.shift();
 
-								if (pair.length === 1) {
+								if (pair.length === 0) {
 									delete window.emotelist[emote];
 									localStorage.setItem("tts_emote_" + window.channelname, JSON.stringify(window.emotelist));
 									TAPIC.sendChat("/me [TTSBOT] 이모티콘 " + emote + " 를 읽지 않습니다.");
 								} else if (pair.length >= 1) {
-									var replacer = pair[1];
+									var replacer = pair.join(" ");
 									window.emotelist[emote] = replacer;
 									localStorage.setItem("tts_emote_" + window.channelname, JSON.stringify(window.emotelist));
 									TAPIC.sendChat("/me [TTSBOT] 이모티콘 " + emote + " 를 " + replacer + " 로 읽습니다.");
