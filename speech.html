@@ -430,11 +430,18 @@
 						// 물결표는 한번만 읽음
 						message = message.replace(/~{2,}/g, "~");
 
-						// ㅋ이 3번 이상 있으면 3번만 읽음
-						message = message.replace(/ㅋ{3,}/g, "ㅋㅋㅋ");
-
-						// 이외 모든 글자가 4번 이상 연속으로 있으면 삭제(읽지 않음)
-						message = message.replace(/(.)\1{3,}/g, "");
+						// 세 글자를 초과하는 패턴을 검색
+						var repeats = message.match(/(.{1,3})\1{3,}/g);
+						if (repeats.length > 2) {
+							// 패턴 수가 많으면 도배로 간주해 검색된 모든 패턴을 읽지 않음
+							repeats.forEach(function(repeat) { message = message.replace(repeat, ""); });
+						} else {
+							// 패턴 수가 많지 않을 경우 각각을 세번만 읽음
+							repeats.forEach( function(repeat) {
+								var keyword = repeat.match(/(.{1,3})\1{3,}/)[1];
+								message = message.replace(repeat, keyword.repeat(3));
+							} );
+						}
 
 						// !로 시작하는 메세지는 읽지 않음
 						message = message.replace(/^!.*/g, "");
