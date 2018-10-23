@@ -431,7 +431,7 @@
 						message = message.replace(/~{2,}/g, "~");
 
 						// 세 글자를 초과하는 패턴을 검색
-						var repeats = message.match(/(.{1,3})\1{3,}/g);
+						var repeats = message.match(/(.{1,3})\1{3,}/g) || [];
 						if (repeats.length > 2) {
 							// 패턴 수가 많으면 도배로 간주해 검색된 모든 패턴을 읽지 않음
 							repeats.forEach(function(repeat) { message = message.replace(repeat, ""); });
