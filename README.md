@@ -1,6 +1,6 @@
 # 채팅 읽어주는 로봇
 
-**:warning:이 저장소는 원본 저장소(https://github.com/Lastorder-DC/chatreader-kor)에서 일부 기능을 수정하여 사용하기 위해 포크한 것으로, 일반적인 사용자는 원본 저장소의 사용법을 참고해주세요.**
+**:warning:이 저장소는 원본 저장소([https://github.com/Lastorder-DC/chatreader-kor](https://github.com/Lastorder-DC/chatreader-kor))에서 일부 기능을 수정하여 사용하기 위해 포크한 것으로, 일반적인 사용자는 원본 저장소의 사용법을 참고해주세요.**
 
 트위치용 TTS 봇입니다. 시청자들의 채팅을 TTS로 읽어 줍니다.
 
