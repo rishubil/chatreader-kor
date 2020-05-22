@@ -134,12 +134,30 @@
 					if (typeof window.emotelist[replace_id] != 'undefined') {
 						message = message.replace(regExp, window.emotelist[replace_id]);
 					} else {
-						message = message.replace(regExp, "");
+						throw {
+							emote_data: replace_list
+						};
 					}
 				}
 			}
 
 			return message;
+		}
+
+		function getKoreanEmoticon(data) {
+			const parsed_emotes = [];
+			if (data.regex == null) {
+				return parsed_emotes;
+			}
+			for (const emote_name in data.regex) {
+				if (data.regex.hasOwnProperty(emote_name)) {
+					const emote = data.regex[emote_name];
+					if (emote.alias.length > 0) {
+						parsed_emotes[emote_name] = emote.alias[0].alias;
+					}
+				}
+			}
+			return parsed_emotes;
 		}
 
 		/**
@@ -214,24 +232,6 @@
 
 		// 기본적으로 밴할 키워드
 		window.bankeyword = window.bankeyword.concat(['섹스']);
-
-		// 기본적으로 읽을 이모티콘
-		Object.assign(window.emotelist, {
-			'silver119Hi': 'hi',
-			'silver119Hmm': '흠',
-			'silver119Heuk': '헤으윽',
-			'tastimBringiton': '덤벼',
-			'tastimJustwait': '딱기다려',
-			'tastimILoveYou': '사랑해요',
-			'yeoMMM': '무말모',
-			'yeoGbs': '갑분싸',
-			'funzinIs': 'is',
-			'funzinWin': 'is',
-			'funzinBabo': 'babo',
-			'funzinBan': 'ban',
-			'funzinDefeat': 'defeat',
-			'funzinHot': 'hot',
-		});
 
 		// 구독자 전용
 		window.tts_subonly = localStorage.getItem("tts_subonly") === "true";
@@ -591,8 +591,44 @@
 							// /me 명령어 입력시 나타나는 맨 마지막 \x01 제거
 							if (message.charCodeAt(message.length - 1) === 1) message = message.substr(0, message.length - 1);
 
-							// 트위치 이모티콘은 읽지 않음
-							message = replaceTwitchEmoticon(message, e.emotes);
+							try {
+								// 한국어 이름이 없는 트위치 이모티콘은 읽지 않음
+								message = replaceTwitchEmoticon(message, e.emotes);
+							} catch (err) {
+								if (err.emote_data != undefined) {
+									$.post(
+										"https://twiticon.com/extension/getemote.php",
+										{
+											data: "[" + $.map(err.emote_data, function (v, k) { return v }).join(',') + "]",
+										}
+									)
+										.done(function (data) {
+											// this is error!
+											for (const emote_name in err.emote_data) {
+												if (err.emote_data.hasOwnProperty(emote_name)) {
+													window.emotelist[emote_name] = '';
+												}
+											}
+											localStorage.setItem("tts_emote_" + window.channelname, JSON.stringify(window.emotelist));
+										})
+										.fail(function (jqXHR) {
+											// this is suceess!
+											const parsed_emotes = getKoreanEmoticon(jQuery.parseJSON(jqXHR.responseText));
+											for (const emote_name in err.emote_data) {
+												if (parsed_emotes.hasOwnProperty(emote_name)) {
+													window.emotelist[emote_name] = parsed_emotes[emote_name];
+												} else if (err.emote_data.hasOwnProperty(emote_name)) {
+													window.emotelist[emote_name] = '';
+												}
+											}
+											localStorage.setItem("tts_emote_" + window.channelname, JSON.stringify(window.emotelist));
+										})
+										.always(function () {
+											TAPIC.emit('message', e);
+										});
+									message = "";
+								}
+							}
 
 							// 한글 자모 발음 변경
 							message = message.replace(/ㄱ/g, "기역");
