@@ -133,7 +133,7 @@ function unbanUser(username, callback) {
  * @param {Function} callback 실행 결과 콜백
  */
 function setVoice(voicename, callback) {
-    if (["default", "polly"].indexOf(voicename) !== -1) {
+    if (["default", "polly", "local"].indexOf(voicename) !== -1) {
         window.def_voice = voicename;
         localStorage.setItem("def_voice", voicename);
         callback(true, "기본 보이스가 변경되었습니다 - " + voicename);
@@ -741,6 +741,17 @@ function playText(string, speed, pitch, ignoreKor, nickname, voicename, banable 
             obj.msg = '<speak><prosody rate="' + parseInt(speed * 100) + '%" pitch="' + parseInt(pitch * 100 - 100) + '%">' + string + '</prosody></speak>';
             obj.volume = window.volume / 100;
             window.speechQueue.push(obj);
+        } else if (voicename === "local") {
+            if (!string.endsWith(".") && !string.endsWith("!") && !string.endsWith("?")) {
+                string += ".";
+            }
+            string = replaceChosung(string);
+            const obj = {};
+            obj.type = "local";
+            obj.msg = "http://localhost:5000/tts-server/api/infer-glowtts?text=" + encodeURIComponent(string);
+            obj.volume = window.volume / 100;
+            obj.speed = speed;
+            window.speechQueue.push(obj);
         }
 
         parseQueue();
@@ -892,7 +903,7 @@ function getParams(name, address = window.location.href) {
 function parseQueue() {
     var queue = window.speechQueue;
 
-    if (window.speechSynthesis.speaking || window.kathy.IsSpeaking()) {
+    if (window.speechSynthesis.speaking || window.kathy.IsSpeaking() || window.isLocalTtsSpeaking) {
         setTimeout(parseQueue, 100);
         return;
     }
@@ -910,9 +921,46 @@ function parseQueue() {
         console.debug("Amazon Polly - " + obj.msg);
         window.kathy.SetVolume(obj.volume);
         window.kathy.Speak(obj.msg);
+    } else if (obj.type === "local") {
+        console.debug("Local TTS - " + obj.msg);
+        var audio = new Audio(obj.msg);
+        audio.crossOrigin = "anonymous";
+        audio.type = 'audio/wav';
+        audio.load();
+
+        amplifyMedia(audio, 1.5 * obj.volume);
+        audio.playbackRate = obj.speed * 0.9;
+
+        window.isLocalTtsSpeaking = true;
+        audio.addEventListener('ended', function() {
+            window.isLocalTtsSpeaking = false;
+        }, {once: true});
+        var playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                window.isLocalTtsSpeaking = false;
+            });
+        }
     } else {
         console.warn("ERROR - Type " + obj.type + " is not supported.");
     }
 
     setTimeout(parseQueue, 100);
+}
+
+window.isLocalTtsSpeaking = false;
+
+function amplifyMedia(audio, multiplier) {
+    var context = new (window.AudioContext || window.webkitAudioContext);
+    var result = {
+        context: context,
+        source: context.createMediaElementSource(audio),
+        gain: context.createGain(),
+        amplify: function (multiplier) { result.gain.gain.value = multiplier; },
+        getAmpLevel: function () { return result.gain.gain.value; }
+    };
+    result.source.connect(result.gain);
+    result.gain.connect(context.destination);
+    result.amplify(multiplier);
+    return result;
 }
